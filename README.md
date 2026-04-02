@@ -1,1 +1,1 @@
-# xss-listener
+Custom XSS listener
