@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>XSS Listener - Aryan</title>
+    <style>
+        body { font-family: monospace; background: #000; color: #0f0; padding: 20px; }
+        pre { background: #111; padding: 15px; border: 1px solid #0f0; white-space: pre-wrap; }
+        h1 { color: #0f0; }
+    </style>
+</head>
+<body>
+    <h1>🔴 XSS Listener Active - aryangeek</h1>
+    <p>Waiting for hits...</p>
+    <pre id="logs">=== Logs will appear here ===\n\n</pre>
+
+    <script>
+        function addLog() {
+            const params = new URLSearchParams(window.location.search);
+            const cookie = params.get('c') || 'no_cookie';
+            const url = params.get('u') || 'no_url';
+            const time = new Date().toISOString();
+
+            const logEntry = `=== XSS HIT ===\nTime: ${time}\nCookie: ${cookie}\nURL: ${url}\n========================\n\n`;
+
+            const logsDiv = document.getElementById('logs');
+            logsDiv.innerHTML += logEntry;
+
+            console.log(logEntry);
+        }
+
+        // Run when page loads
+        addLog();
+    </script>
+</body>
+</html>
